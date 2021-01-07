@@ -1,7 +1,7 @@
 import jieba               #分词库
 import  jieba.analyse
 import  pymongo
-import redis
+import init_tools
 import os
 import re
 import json

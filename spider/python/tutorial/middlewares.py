@@ -7,6 +7,9 @@
 
 from scrapy import signals
 from scrapy.conf import settings
+from scrapy.http import HtmlResponse
+from tutorial.driver import tool
+
 
 class TutorialSpiderMiddleware(object):
     # Not all methods need to be defined. If a method is not defined,
@@ -57,20 +60,20 @@ class TutorialSpiderMiddleware(object):
 
 
 class ProxyMiddleware(object):
-
     def process_request(self, request, spider):
-
         request.meta['proxy'] = settings.get('HTTP_PROXY')
         pass
 
 
 class LagouMiddleware(object):
-
-    def process_request(self,request,spider):
+    def process_request(self, request, spider):
         request.headers['cookie'] = settings.get('LAGOU_COOKIE')
 
-class ZhipinMiddleware(object):
 
-    def process_request(self,request,spider):
-        pass
+class ZhipinMiddleware(object):
+    def process_request(self, request, spider):
+        driver = tool().driver
+        driver.get(request.url)
         # request.headers['cookie'] = settings.get('BOSS_COOKIE')
+        response = HtmlResponse(encoding='utf-8', url=driver.current_url, body=driver.page_source)
+        return response
