@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import re
 # Define your item pipelines here
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
@@ -27,11 +28,12 @@ def clean_education(edu, body):
 
 
 def clear_salary(salary):
+    pattern = re.compile(r'K(·(\d)+薪)?$')
+    salary = pattern.sub('', salary)
     res = salary.split("-")
     temp = []
-
     for x in res:
-        temp.append(int(x.upper().replace("K", " ")) * 1000)
+        temp.append(int(x) * 1000)
     result = {
         "min": temp[0],
         "max": temp[1],
@@ -41,33 +43,39 @@ def clear_salary(salary):
 
 
 def clear_time(time):
-    now_year = datetime.datetime.now().year
-    if '发布于' in time:
-        time = time.replace("发布于", str(now_year) + "-")
-        time = time.replace("月", "-")
-        time = time.replace("日", "")
-        if time.find("昨天") > 0:
-            time = str(datetime.date.today() - datetime.timedelta(days=1))
-        elif time.find(":") > 0:
-            time = str(datetime.date.today())
+    # now_year = datetime.datetime.now().year
+    # if '发布于' in time:
+    #     time = time.replace("发布于", str(now_year) + "-")
+    #     time = time.replace("月", "-")
+    #     time = time.replace("日", "")
+    #     if time.find("昨天") > 0:
+    #         time = str(datetime.date.today() - datetime.timedelta(days=1))
+    #     elif time.find(":") > 0:
+    #         time = str(datetime.date.today())
+    if time is not None:
+        pattern = re.compile(r'\d{4}-\d{1,2}-\d{1,2}$')
+        time = pattern.search(time)
+    else:
+        time = ''
     return time
 
 
 def clear_position(name):
     data = name.split(" ")
-
     name = data[0]
     work_year = data[-2]
     educational = data[-1]
     return name, work_year, educational
 
 
-# 判断PHP是否在职位名称中，不在就过滤掉。
+# 判断java是否在职位名称中，不在就过滤掉。
 # jd中含有php不参考，因为很多jd中都乱写
 def clean_name(name):
-    if "PHP" not in name.upper():
-        return False
-    return True
+    if name is not None:
+        pattern = re.compile(r'java')
+        if pattern.match(name):
+            return True
+    return False
 
 
 class TutorialPipeline(object):
@@ -84,26 +92,20 @@ class TutorialPipeline(object):
 class ZhipinPipeline(object):
     @classmethod
     def process_item(self, item, spider):
-        # client = pymongo.MongoClient(host="127.0.0.1", port=27017)
-        # db = client['job']
-        # collection = db['position']
         es = Elasticsearch(settings.get('ELASTIC_NODES'))
         es.indices.create(index=settings.get('ZHIPIN_JOB_INDEX'), ignore=400)
-        item['timestamp'] = datetime.datetime.now()
         item['salary'] = clear_salary(item['salary'])
         item['create_time'] = clear_time(item['create_time'])
         item['educational'] = clean_education(item['educational'], item['body'])
+        item['timestamp'] = datetime.datetime.now()
         is_php = clean_name(item['position_name'])
         if is_php is True:
-            # collection.insert(dict(item))
             es.index(index=settings.get('ZHIPIN_JOB_INDEX'), id=uuid.uuid1(), body=dict(item))
-        # client.close()
         return item
 
 
 # 处理51job数据
 class FiveJobPipeline(object):
-
     def clear_salary(self, salary):
         lists = salary.split("/")[0].split('-')
         min, max = lists
@@ -114,9 +116,7 @@ class FiveJobPipeline(object):
         else:
             max = max.replace("万", "")
         print(max)
-        result = {}
-        result['min'] = float(min) * unit
-        result['max'] = float(max) * unit
+        result = {'min': float(min) * unit, 'max': float(max) * unit}
         result['avg'] = (result['max'] + result['min']) / 2
         return result
 

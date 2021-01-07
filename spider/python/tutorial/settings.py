@@ -114,7 +114,7 @@ REDIS_POSITION_KEY = "positionIds"
 # 最大的页数
 MAX_PAGE = 4
 # sleep的时间间隔
-SLEEP_SECONDS = 50
+SLEEP_SECONDS = 10
 # 抓取的语言
 LANGUAGE = 'Java'
 # 上海sz
@@ -123,13 +123,13 @@ BOSS_CITY_CODE = '101280600'
 # REDIS
 REDIS_HOST = "node101"
 REDIS_PORT = "7001"
-# mongodb
+# MONGODB
 
 # REDIS CLUSTER
 STARTUP_NODES = [{"host": "node101", "port": "7001"}]
 
 # ELASTIC CLUSTER
-ZHIPIN_JOB_INDEX = 'zhinpin_job-index'
+ZHIPIN_JOB_INDEX = 'zhinpin_job_index'
 ELASTIC_NODES = [{"host": "node101", "port": 9200},
                  {"host": "node102", "port": 9200},
                  {"host": "node103", "port": 9200}]

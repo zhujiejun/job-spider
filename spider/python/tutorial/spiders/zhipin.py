@@ -10,24 +10,12 @@ from tutorial.items import TutorialItem
 
 
 # zhipin 爬虫
-def parse_item(response):
-    item = TutorialItem()
-    q = response.css
-    item['address'] = q('.location-address::text').extract_first()
-    item['create_time'] = q('.job-tags .time::text').extract_first()
-    item['body'] = q('.text').xpath('string(.)').extract_first()
-    item['company_name'] = q('.business-info h4::text').extract_first()
-    item['postion_id'] = response.url.split("/")[-1].split('.')[0]
-    item = dict(item, **response.meta)
-    yield item
-
-
 class ZhipinSpider(scrapy.Spider):
     name = "boss"
     allowed_domains = ["www.zhipin.com"]
     current_page = 1  # 开始页码
     start_urls = [
-        "https://www.zhipin.com/job_detail/?city=" + settings.get("BOSS_CITY_CODE") + "&query=" + settings.get("LANGUAGE")]
+        "https://www.zhipin.com/job_detail/?city=" + settings.get("BOSS_CITY_CODE") + "&source=10" + "&query=" + settings.get("LANGUAGE")]
     custom_settings = {
         "DOWNLOADER_MIDDLEWARES": {
             'tutorial.middlewares.ZhipinMiddleware': 299,
@@ -49,12 +37,6 @@ class ZhipinSpider(scrapy.Spider):
         }
     }
 
-    # def __init__(self):
-    #     super(ZhipinSpider, self).__init__()
-    #
-    # def closed(self, reason):
-    #     self.browser.close()
-
     def parse(self, response):
         # print(response.text)
         # return
@@ -65,12 +47,8 @@ class ZhipinSpider(scrapy.Spider):
         selector = Selector(text=html)
         items = selector.css('.item')
         host = 'https://www.zhipin.com'
-        # 初始化redis
-        redis_host = settings.get('REDIS_HOST')
-        redis_port = settings.get('REDIS_PORT')
-        # pool = redis.ConnectionPool(host=redis_host, port=redis_port, decode_responses=True)
-        # r = redis.Redis(connection_pool=pool)
-        r = RedisCluster(startup_nodes=settings.get('STARTUP_NODES'), decode_responses=True)
+        # 初始化redis cluster
+        rc = RedisCluster(startup_nodes=settings.get('STARTUP_NODES'), decode_responses=True)
         setkey = settings.get('REDIS_POSITION_KEY')
         sleep_seconds = int(settings.get('SLEEP_SECONDS'))
         for item in items:
@@ -90,12 +68,23 @@ class ZhipinSpider(scrapy.Spider):
 
             position_id = url.split("/")[-1].split('.')[0]
             print(position_id)
-            if (r.sadd(setkey, position_id)) == 1:
-                yield Request(url, callback=parse_item, meta=meta)
+            if (rc.sadd(setkey, position_id)) == 1:
+                yield Request(url, callback=self.parse_item, meta=meta)
         max_page = settings.get('MAX_PAGE')
         if self.current_page < max_page:
             self.current_page += 1
-            api_url = "https://www.zhipin.com/job_detail/?city=" + settings.get("BOSS_CITY_CODE") + "&query=" + settings.get("LANGUAGE") + "&page=" + str(self.current_page)
+            api_url = "https://www.zhipin.com/job_detail/?city=" + settings.get("BOSS_CITY_CODE") + "&source=10" + "&query=" + settings.get("LANGUAGE") + "&page=" + str(self.current_page)
             time.sleep(int(random.uniform(sleep_seconds, sleep_seconds + 20)))
             yield Request(api_url, callback=self.parse)
         pass
+
+    def parse_item(self, response):
+        item = TutorialItem()
+        q = response.css
+        item['address'] = q('.location-address::text').extract_first()
+        item['create_time'] = q('.job-tags .time::text').extract_first()
+        item['body'] = q('.text').xpath('string(.)').extract_first()
+        item['company_name'] = q('.business-info h4::text').extract_first()
+        item['postion_id'] = response.url.split("/")[-1].split('.')[0]
+        item = dict(item, **response.meta)
+        yield item
