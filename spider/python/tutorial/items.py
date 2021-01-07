@@ -15,8 +15,8 @@ class TutorialItem(scrapy.Item):
     position_id = scrapy.Field()  #
     position_name = scrapy.Field()  #
     salary = scrapy.Field()  #
-    describe = scrapy.Field() #?
+    describe = scrapy.Field()  # ?
     work_year = scrapy.Field()  #
     educational = scrapy.Field()  #
-    create_time = scrapy.Field() #
+    create_time = scrapy.Field()  #
     pass
