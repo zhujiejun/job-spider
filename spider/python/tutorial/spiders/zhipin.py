@@ -50,21 +50,24 @@ class ZhipinSpider(scrapy.Spider):
         sleep_seconds = int(settings.get('SLEEP_SECONDS'))
         for item in items:
             url = host + item.css('a::attr(href)').extract_first()
-            position_name = item.css('h4::text').extract_first()  # 职位名称
-            salary = item.css('.salary::text').extract_first() or ''  # 薪资
-            work_year = item.css('.msg em:nth-child(2)::text').extract_first() or '不限'  # 工作年限
-            educational = item.css('.msg em:nth-child(3)::text').extract_first()  # 教育程度
+            company_name = item.css('.name::text').extract_first()
+            position_id = url.split("/")[-1].split('.')[0]
+            position_name = item.css('.title-text::text').extract_first()
+            salary = item.css('.salary::text').extract_first() or ''
+            work_year = item.css('.msg em:nth-child(2)::text').extract_first() or '不限'
+            educational = item.css('.msg em:nth-child(3)::text').extract_first() or '不限'
             meta = {
+                "company_name": company_name,
+                "position_name": position_name,
+                "position_id": position_id,
                 "salary": salary,
                 "work_year": work_year,
                 "educational": educational,
-                "position_name": position_name,
             }
             sleep_seconds = int(settings.get('SLEEP_SECONDS'))
             time.sleep(int(random.uniform(sleep_seconds, sleep_seconds + 20)))
 
-            position_id = url.split("/")[-1].split('.')[0]
-            print(position_id)
+            print(f'--------position id: {position_id}--------')
             if (rc.sadd(setkey, position_id)) == 1:
                 yield Request(url, callback=self.parse_item, meta=meta)
         max_page = settings.get('MAX_PAGE')
@@ -79,9 +82,7 @@ class ZhipinSpider(scrapy.Spider):
         item = TutorialItem()
         selector = response.css
         item['address'] = selector('.location-address::text').extract_first()
-        item['create_time'] = selector('.job-tags .time::text').extract_first()
-        item['body'] = selector('.text').xpath('string(.)').extract_first()
-        item['company_name'] = selector('.business-info h4::text').extract_first()
-        item['postion_id'] = response.url.split("/")[-1].split('.')[0]
+        item['describe'] = selector('.text').xpath('string(.)').extract_first()
+        item['create_time'] = selector('.job-sider .sider-company .gray::text').extract_first()
         item = dict(item, **response.meta)
         yield item

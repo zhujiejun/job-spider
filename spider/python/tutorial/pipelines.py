@@ -96,10 +96,11 @@ class ZhipinPipeline(object):
         es.indices.create(index=settings.get('ZHIPIN_JOB_INDEX'), ignore=400)
         item['salary'] = clear_salary(item['salary'])
         item['create_time'] = clear_time(item['create_time'])
-        item['educational'] = clean_education(item['educational'], item['body'])
+        item['educational'] = clean_education(item['educational'], item['describe'])
         item['timestamp'] = datetime.datetime.now()
-        is_php = clean_name(item['position_name'])
-        if is_php is True:
+        is_java = clean_name(item['position_name'])
+        print(f'---------the data item is {str(item)}----------\n\n')
+        if is_java is True:
             es.index(index=settings.get('ZHIPIN_JOB_INDEX'), id=uuid.uuid1(), body=dict(item))
         return item
 
