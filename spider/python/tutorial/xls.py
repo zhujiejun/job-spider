@@ -31,12 +31,10 @@ class tool:
         rbook = xlrd.open_workbook(r'/home/cat/Downloads/common/job.xls')
         rsheet = rbook.sheet_by_index(0)
         # 获取所有sheet的名字
-        # print(wb.sheet_names())
+        # print(rbook.sheet_names())
         wbook = copy.copy(rbook)
         # 获取第1个sheet的表
         wsheet = wbook.get_sheet(0)
         for c in range(0, len(data)):
-            wsheet.write(rsheet.nrows + 1, c, data[c], set_stlye("Time New Roman", 220, True))
+            wsheet.write(rsheet.nrows + 1, c, data[c], self.set_stlye("Time New Roman", 220, True))
         wbook.save('/home/cat/Downloads/common/job.xls')
-
-        return sheet
