@@ -1,21 +1,52 @@
 import os
 import sys
-
-from scrapy.cmdline import execute
-
 # import uuid
+from scrapy.cmdline import execute
 # from rediscluster import RedisCluster
 # from elasticsearch import Elasticsearch
 
-# startup_nodes = [{"host": "node101", "port": "7001"}]
-# elastic_nodes = [{"host": "node101", "port": 9200},
-#                  {"host": "node102", "port": 9200},
-#                  {"host": "node103", "port": 9200}]
+import xlrd
+import xlwt
 
-# url = 'https://www.zhipin.com/job_detail/?city=101280600&query=Java'
+
+# 设置表格样式
+def set_stlye(name, height, bold=False):
+    # 初始化样式
+    style = xlwt.XFStyle()
+    # 创建字体
+    font = xlwt.Font()
+    font.bold = bold
+    font.colour_index = 4
+    font.height = height
+    font.name = name
+    style.font = font
+    return style
+
+
+def init_execel():
+    wb = xlwt.Workbook()
+    job_sheet = wb.add_sheet(u'job', cell_overwrite_ok=True)
+    title = [u'company_name', u'address', u'position_id', u'position_name',
+             u'salary', u'describe', u'work_year', u'educational', u'create_time']
+    for i in range(0, len(title)):
+        job_sheet.write(0, i, title[i], set_stlye("Time New Roman", 220, True))
+    wb.save('/home/cat/Downloads/common/job.xls')
+
+
+def read_excel():
+    # 打开文件
+    wb = xlrd.open_workbook(r'/home/cat/Downloads/common/job.xls')
+    # 获取所有sheet的名字
+    print(wb.sheet_names())
+    # 获取第二个sheet的表明
+    sheet = wb.sheet_by_index(0)
+    return sheet
+
+
 if __name__ == '__main__':
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     execute(['scrapy', 'crawl', 'boss'])
+
     # rc = RedisCluster(startup_nodes=startup_nodes, decode_responses=True)
     # rc.set("foo", "bar")
     # es = Elasticsearch(elastic_nodes)
@@ -40,3 +71,7 @@ if __name__ == '__main__':
     #     temp.append(int(x) * 1000)
     # for item in temp:
     #     print(item)
+
+    # init_execel()
+    # sheet = read_excel()
+    # print(sheet.nrows)

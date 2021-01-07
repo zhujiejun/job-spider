@@ -9,3 +9,6 @@ Scrapy==1.6.0
 elasticsearch==7
 redis-py-cluster
 selenium
+xlutils
+xlrd
+xlwt
