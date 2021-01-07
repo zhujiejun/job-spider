@@ -80,11 +80,11 @@ class ZhipinSpider(scrapy.Spider):
 
     def parse_item(self, response):
         item = TutorialItem()
-        q = response.css
-        item['address'] = q('.location-address::text').extract_first()
-        item['create_time'] = q('.job-tags .time::text').extract_first()
-        item['body'] = q('.text').xpath('string(.)').extract_first()
-        item['company_name'] = q('.business-info h4::text').extract_first()
+        selector = response.css
+        item['address'] = selector('.location-address::text').extract_first()
+        item['create_time'] = selector('.job-tags .time::text').extract_first()
+        item['body'] = selector('.text').xpath('string(.)').extract_first()
+        item['company_name'] = selector('.business-info h4::text').extract_first()
         item['postion_id'] = response.url.split("/")[-1].split('.')[0]
         item = dict(item, **response.meta)
         yield item
