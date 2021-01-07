@@ -38,12 +38,9 @@ class ZhipinSpider(scrapy.Spider):
     }
 
     def parse(self, response):
-        # print(response.text)
-        # return
         # js = json.loads(response.body)
         # html = js['html']
         html = response.body
-        # print(html)
         selector = Selector(text=html)
         items = selector.css('.item')
         host = 'https://www.zhipin.com'
